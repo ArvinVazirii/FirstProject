@@ -356,7 +356,7 @@ def startMenuDecide(choose) :
             clear()
             location = "showTables"
             choose = str(msvcrt.getch(), "utf-8")
-
+            showTableInfos()
             return
         case '3' :
             clear()
@@ -534,6 +534,12 @@ def decideForRemove() :
         itemname = input("Please enter the item name that you want to remove: ")
         Food.removeAFood(itemname)
 
+def showTableInfos():
+
+    myc.execute("select * from tables")
+    info = myc.fetchall()
+    pritn(json.dumps(info, indent = 1))
+    input("\n\tPress enter to continue .....")
 
 def getLog():
 
