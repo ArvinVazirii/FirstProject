@@ -27,18 +27,21 @@ class Game :
         myc.executemany(code, list(gamesName.items()))
         mydb.commit()
 
-
     @staticmethod
     def gameplayed(name):
         timeplayed = int(gamesName[name])
         gamesName[name] = str(timeplayed + 1)
-        getLog()
+        code = "update gamelist set count = %s where name = %s"
+        myc.execute(code, [(gamesName[name], name)])
+        myc.commit()
 
     @staticmethod
     def gameUnplayed(name):
         timeplayed = int(gamesName[name])
         gamesName[name] = str(timeplayed - 1)
-        getLog()
+        code = "update gamelist set count = %s where name = %s"
+        myc.execute(code, [(gamesName[name], name)])
+        myc.commit()
 
     @staticmethod
     def addGame(name):
@@ -47,11 +50,11 @@ class Game :
 
         if not name in gamesName:
             gamesName.update({name : "0"})
+            code = "insert into gamelist(name, count) values(%s, 0)"
+            myc.execute(code, [(name)])
         else :
             print("!!This game already exists!!")
             time.sleep(1)
-
-        getLog()
 
     @staticmethod
     def removeAGame(name):
@@ -60,11 +63,12 @@ class Game :
         if name in gamesName:
 
             gamesName.pop(name)
+            code = "delete from gamelist where gamelist.name = %s"
+            myc.execute(code, [(name)])
+
         else :
             print("!!There is no game with that name!!")
             time.sleep(1)
-
-        getLog()
 
 class Food :
 
@@ -95,12 +99,18 @@ class Food :
     def order(name):
         timeplayed = int(menu[name])
         menu[name] = str(timeplayed + 1)
+        code = "update menu set count = %s where name = %s"
+        myc.execute(code, [(menu[name], name)])
+        myc.commit()
         # getLog()
 
     @staticmethod
     def unOrdered(name):
         timeplayed = int(gamesName[name])
         gamesName[name] = str(timeplayed - 1)
+        code = "update menu set count = %s where name = %s"
+        myc.execute(code, [(menu[name], name)])
+        myc.commit()
         # getLog()
 
     @staticmethod
@@ -109,6 +119,8 @@ class Food :
 
         if not name in menu:
             menu.update({name : "0"})
+            code = "insert into menu(name, count) values(%s, 0)"
+            myc.execute(code, [(name)])
 
         else:
             print("!!This food already exists on menu!!")
@@ -120,7 +132,10 @@ class Food :
     def removeAFood(name):
         global menu
         if name in menu:
+
             menu.pop(name)
+            code = "delete from menu where menu.name = %s"
+            myc.execute(code, [(itemname)])
         else :
             print("!!There is no item with that name!!")
             time.sleep(1)
@@ -155,10 +170,17 @@ class customer(person) :
         self.checkInTime = ""
         self.checkOutTime = ""
         self.costs = 0
+        infos = self.getInfos()
+        code = "insert into customers values(%s, %s, %s, %s, %s, %s, %s, %s)"
+        temp = []
+        temp.append(infos)
+        myc.executemany(code, temp)
 
     def addNewGame(self, gameName) :
 
         self.gameList.append(gameName)
+        code = "update customers set gamecount = %s where name = %s and lastname = %s"
+        myc.execute(code, (len(self.gameList), self.name, self.lastname))
         Game.gameplayed(gameName)
 
     def addNewGame_List(self, gameList) :
@@ -172,6 +194,8 @@ class customer(person) :
 
     def orderFood(self, name) :
         self.orders.append(name)
+        code = "update customers set orderscount = %s where name = %s and lastname = %s"
+        myc.execute(code, [(len(orders), self.name, self.lastname)])
         Food.order(name)
 
     def removeOrder(self, name) :
@@ -226,24 +250,15 @@ class table :
             getCustomerInfo()
             location = "startMenu"
 
+        myc.execute("insert into tablesInfo(count, emptyness) values(0, 1)")
+
     def getTableInfo(self):
         return str(self.count) + " / " + str(self.empty)
 
-    # def getTableCustomerInfos(self) :
-    #     infolist = []
-    #     for i in self.customerList:
-    #         infolist.append(i.getFullName())
-    #         infolist.extend(i.getOrderes())
-    #         infolist.extend(i.getGamesPlayed())
-    #         infolist.append(i.getCheckInTime())
-    #         infolist.append(i.getCheckOutTime())
-    #         infolist.append(i.getCosts())
-    #     return infolist
-
     def getinfos(self):
-        # code = "insert into tablesInfo(count, emptyness) values(%s, %s)"
+
         return (self.count, self.empty)
-        # myc.executemany(code, x)
+
     def saveCustomerInfos(self):
 
         myc.execute("truncate customers")
@@ -265,6 +280,8 @@ class table :
         self.customerList.append(customer(name, lastname, self.numberOfTheTable))
         self.count += 1
         self.empty = False
+        code = "update tablesInfo set count = %s, emptyness = 0 where tablenumber = %s"
+        myc.execute(code, (self.count, self.numberOfTheTable))
 
     def nameExist(self, name):
         for i in self.customerList:
@@ -316,9 +333,11 @@ class table :
         for i in self.customerList :
             if(i.getName() == name and i.getLastName() == lastname) :
                 i.orderFood(name)
-            else :
-                print("There is no customer with that name")
-                time.sleep(1)
+                return
+
+        print("There is no customer with that name")
+        time.sleep(1)
+
 
     def checkout(self, name, lastname) :
         for i in self.customerList :
@@ -349,12 +368,14 @@ def startMenuDecide(choose) :
             clear()
             printChangeMenu()
             location = "changeMenu"
+            getLog()
             choose = str(msvcrt.getch(), "utf-8")
             changeMenuDecide(choose)
             return
         case '2' :
             clear()
             location = "showTables"
+            getLog()
             showTableInfos()
             startMenuDecide('0')
             return
@@ -364,7 +385,6 @@ def startMenuDecide(choose) :
             printAddOrRemove()
             addOrRemove()
             getLog()
-            saveTableinfos()
             startMenuDecide('0')
             return
         case '4' :
@@ -372,8 +392,7 @@ def startMenuDecide(choose) :
             location = "add or remove game"
             printAddOrRemove()
             addOrRemove()
-            getlog()
-            savegamelist()
+            getLog()
             startMenuDecide('0')
             return
         case '5' :
@@ -381,8 +400,7 @@ def startMenuDecide(choose) :
             location = "add or remove food"
             printAddOrRemove()
             addOrRemove()
-            gtelog()
-            savemenu()
+            getLog()
             startMenuDecide('0')
             return
 
@@ -392,6 +410,7 @@ def startMenuDecide(choose) :
         case '0':
             clear()
             location = "startMenu"
+            getLog()
             printStartMenu()
             choose = str(msvcrt.getch(), "utf-8")
             startMenuDecide(choose)
@@ -406,8 +425,6 @@ def changeMenuDecide(choose) :
             location = "addCustomer"
             getCustomerInfo()
             getLog()
-            saveTableinfos()
-            saveCustomerinfos()
             startMenuDecide("0")
             return
         case '2' :
@@ -415,9 +432,6 @@ def changeMenuDecide(choose) :
             location = "addGame"
             addGameToTable()
             getLog()
-            saveTableinfos()
-            saveCustomerinfos()
-            savegamelist()
             startMenuDecide("0")
             return
         case '3' :
@@ -425,9 +439,6 @@ def changeMenuDecide(choose) :
             locaton = "orderFood"
             orderFood()
             getLog()
-            saveTableinfos()
-            saveCustomerinfos()
-            savemenu()
             startMenuDecide("0")
             return
 
@@ -511,6 +522,7 @@ def addOrRemove() :
     clear()
 
 def decideForAdd() :
+
     global tables
     if (location == "add or remove table"):
         tables.append(table(0, len(tables) + 1))
@@ -535,6 +547,9 @@ def decideForRemove() :
         if (number <= len(tables)):
 
             tables.pop(number - 1)
+            code = "delete from tablesInfo where tablenumber = %s"
+            myc.execute(code, [(number)])
+
         else :
             print("There is no table with that name")
             time.sleep(1)
@@ -547,6 +562,7 @@ def decideForRemove() :
         itemname = input("Please enter the item name that you want to remove: ")
         Food.removeAFood(itemname)
 
+
 def showTableInfos():
 
     myc.execute("select * from tablesInfo")
@@ -554,11 +570,11 @@ def showTableInfos():
     print(infos)
     input("\n\tPress enter to continue .....")
 
-def savegamelist():
-    Game.saveGameList()
+def updategamelist():
+    Game.updateGameList()
 
-def savemenu():
-    Food.savemenu()
+def updatemenu():
+    Food.upatemenu()
 
 def saveTableinfos():
 
@@ -571,10 +587,10 @@ def saveTableinfos():
     myc.executemany(code, savereport)
     mydb.commit()
 
-def saveCustomerinfos():
+def updateCustomerinfos():
 
     for i in tables:
-        i.saveCustomerInfos()
+        i.updateCustomerInfos()
 
 def getLog():
 
@@ -589,6 +605,8 @@ def getLog():
     # for i in tables :
     #     log.write(json.dumps(i.getTableInfo(), indent = 0))
     #     log.write(json.dumps(i.getTableCustomerInfos(), indent = 0))
+
+
 
 
 mydb = mysql.connect(host = "localhost", user = "root", password = "root", database = "testdp")
