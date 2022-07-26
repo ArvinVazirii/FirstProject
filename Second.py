@@ -355,8 +355,8 @@ def startMenuDecide(choose) :
         case '2' :
             clear()
             location = "showTables"
-            choose = str(msvcrt.getch(), "utf-8")
             showTableInfos()
+            startMenuDecide('0')
             return
         case '3' :
             clear()
@@ -364,6 +364,8 @@ def startMenuDecide(choose) :
             printAddOrRemove()
             addOrRemove()
             getLog()
+            saveTableinfos()
+            startMenuDecide('0')
             return
         case '4' :
             clear()
@@ -371,6 +373,8 @@ def startMenuDecide(choose) :
             printAddOrRemove()
             addOrRemove()
             getlog()
+            savegamelist()
+            startMenuDecide('0')
             return
         case '5' :
             clear()
@@ -378,6 +382,8 @@ def startMenuDecide(choose) :
             printAddOrRemove()
             addOrRemove()
             gtelog()
+            savemenu()
+            startMenuDecide('0')
             return
 
         case '6' :
@@ -400,6 +406,8 @@ def changeMenuDecide(choose) :
             location = "addCustomer"
             getCustomerInfo()
             getLog()
+            saveTableinfos()
+            saveCustomerinfos()
             startMenuDecide("0")
             return
         case '2' :
@@ -407,6 +415,9 @@ def changeMenuDecide(choose) :
             location = "addGame"
             addGameToTable()
             getLog()
+            saveTableinfos()
+            saveCustomerinfos()
+            savegamelist()
             startMenuDecide("0")
             return
         case '3' :
@@ -414,6 +425,9 @@ def changeMenuDecide(choose) :
             locaton = "orderFood"
             orderFood()
             getLog()
+            saveTableinfos()
+            saveCustomerinfos()
+            savemenu()
             startMenuDecide("0")
             return
 
@@ -495,7 +509,6 @@ def addOrRemove() :
         decideForRemove()
 
     clear()
-    startMenuDecide("0")
 
 def decideForAdd() :
     global tables
@@ -536,30 +549,41 @@ def decideForRemove() :
 
 def showTableInfos():
 
-    myc.execute("select * from tables")
-    info = myc.fetchall()
-    pritn(json.dumps(info, indent = 1))
+    myc.execute("select * from tablesInfo")
+    infos = myc.fetchall()
+    print(infos)
     input("\n\tPress enter to continue .....")
+
+def savegamelist():
+    Game.saveGameList()
+
+def savemenu():
+    Food.savemenu()
+
+def saveTableinfos():
+
+    myc.execute("truncate tablesInfo")
+    savereport = []
+    code = "insert into tablesInfo(count, emptyness) values(%s, %s)"
+    for i in tables:
+        savereport.append(i.getinfos())
+
+    myc.executemany(code, savereport)
+    mydb.commit()
+
+def saveCustomerinfos():
+
+    for i in tables:
+        i.saveCustomerInfos()
 
 def getLog():
 
     # if(os.path.exists("log.txt")):
     #     os.remove("log.txt")
     # log = open("log.txt", "a")
-    Game.saveGameList()
-    Food.savemenu()
     code = "insert into location(name) values(%s)"
     x = [(location, )]
     myc.executemany(code, x)
-
-    myc.execute("truncate tablesInfos")
-    savereport = []
-    code = "insert into tablesInfo(count, emptyness) values(%s, %s)"
-    for i in tables:
-        savereport.append(i.getinfos())
-        i.saveCustomerInfos()
-
-    myc.executemany(code, savereport)
     mydb.commit()
     # log.write(json.dumps(location, indent = 0))
     # for i in tables :
@@ -599,15 +623,12 @@ myc.execute("""create table if not exists customers(
 )""")
 gamesName = {}
 menu = {}
+tables = []
 
 gamesName = Game.getGameList()
 menu = Food.getmenu()
-
+saveTableinfos()
 location = "startMenu"
-tables = []
-tables.append(table(0, len(tables) + 1))
-tables.append(table(0, len(tables) + 1))
-getLog()
 printStartMenu()
 choose = str(msvcrt.getch(), "utf-8")
 startMenuDecide(choose)
