@@ -1,142 +1,7 @@
 import json, os, msvcrt, time, mysql.connector as mysql
-
-
-class Game :
-
-    # gamesName = {}
-
-    @staticmethod
-    def getGameList() :
-        # if(os.path.exists("gameList.txt")) :
-        #     with open("gameList.txt", "r") as game :
-        #         games = json.loads(game.read())
-
-        myc.execute("select name, count from gamelist")
-        gamesName = dict(myc.fetchall())
-
-        return gamesName
-
-
-    @staticmethod
-    def gameplayed(name):
-        timeplayed = int(gamesName[name])
-        gamesName[name] = str(timeplayed + 1)
-        code = "update gamelist set count = %s where name = %s"
-        myc.execute(code, [(gamesName[name], name)])
-        myc.commit()
-
-    @staticmethod
-    def gameUnplayed(name):
-        timeplayed = int(gamesName[name])
-        gamesName[name] = str(timeplayed - 1)
-        code = "update gamelist set count = %s where name = %s"
-        myc.execute(code, [(gamesName[name], name)])
-        myc.commit()
-
-    @staticmethod
-    def addGame(name):
-
-        global gamesName
-
-        if not name in gamesName:
-            gamesName.update({name : "0"})
-            code = "insert into gamelist(name, count) values(%s, 0)"
-            myc.execute(code, [(name)])
-        else :
-            print("!!This game already exists!!")
-            time.sleep(1)
-
-    @staticmethod
-    def removeAGame(name):
-        global gamesName
-
-        if name in gamesName:
-
-            gamesName.pop(name)
-            code = "delete from gamelist where gamelist.name = %s"
-            myc.execute(code, [(name)])
-
-        else :
-            print("!!There is no game with that name!!")
-            time.sleep(1)
-
-class Food :
-
-    # get menu using json from "menu.txt" and save it on foodmenu and return it
-    @staticmethod
-    def getmenu() :
-
-        # if(os.path.exists("menu.txt")) :
-        #     with open("menu.txt", "r") as menu :
-        #         foodmenu = json.loads(menu.read())
-        myc.execute("select name, count from menu")
-        menu = dict(myc.fetchall())
-
-        return menu
-
-
-    @staticmethod
-    def order(name):
-        timeplayed = int(menu[name])
-        menu[name] = str(timeplayed + 1)
-        code = "update menu set count = %s where name = %s"
-        myc.execute(code, [(menu[name], name)])
-        myc.commit()
-        # getLog()
-
-    @staticmethod
-    def unOrdered(name):
-        timeplayed = int(gamesName[name])
-        gamesName[name] = str(timeplayed - 1)
-        code = "update menu set count = %s where name = %s"
-        myc.execute(code, [(menu[name], name)])
-        myc.commit()
-        # getLog()
-
-    @staticmethod
-    def addFood(name):
-        global menu
-
-        if not name in menu:
-            menu.update({name : "0"})
-            code = "insert into menu(name, count) values(%s, 0)"
-            myc.execute(code, [(name)])
-
-        else:
-            print("!!This food already exists on menu!!")
-            time.sleep(1)
-
-        # getLog()
-
-    @staticmethod
-    def removeAFood(name):
-        global menu
-        if name in menu:
-
-            menu.pop(name)
-            code = "delete from menu where menu.name = %s"
-            myc.execute(code, [(itemname)])
-        else :
-            print("!!There is no item with that name!!")
-            time.sleep(1)
-
-        # getLog()
-
-class person :
-    def __init__(self, name, lastname) :
-        self.name = name
-        self.lastname = lastname
-
-    def changeName(self, name) :
-        self.name = name
-
-    def changeLastName(self, lastname) :
-        self.lastname = lastName
-
-    def getName(self):
-        return self.name
-    def getLastName(self):
-        return self.lastname
+from Game import Game
+from Food import Food
+from Person import person
 
 class customer(person) :
 
@@ -161,26 +26,26 @@ class customer(person) :
         self.gameList.append(gameName)
         code = "update customers set gamecount = %s where name = %s and lastname = %s"
         myc.execute(code, (len(self.gameList), self.name, self.lastname))
-        Game.gameplayed(gameName)
+        Game.gameplayed(gameName, myc)
 
     def addNewGame_List(self, gameList) :
         self.gameList.extend(gameList)
         for i in self.gameList :
-            Game.gameplayed(gamename)
+            Game.gameplayed(gamename, myc)
 
     def removeAGame(self, gamename) :
         self.gameList.pop()
-        Game.gameUnplayed(gamename)
+        Game.gameUnplayed(gamename, myc)
 
     def orderFood(self, name) :
         self.orders.append(name)
         code = "update customers set orderscount = %s where name = %s and lastname = %s"
         myc.execute(code, [(len(orders), self.name, self.lastname)])
-        Food.order(name)
+        Food.order(name, myc)
 
     def removeOrder(self, name) :
         self.orders.pop()
-        Food.unOrdered(name)
+        Food.unOrdered(name, myc)
 
     def checkOut():
         self.checkOutTime = time.strftime("%H:%M:%S", time.localtime())
@@ -518,11 +383,11 @@ def decideForAdd() :
 
     elif(location == "add or remove game") :
         gamename = input("Please enter the new game name: ")
-        Game.addGame(gamename)
+        Game.addGame(gamename, myc)
 
     elif(location == "add or remove food") :
         itemname = input("Please enter the new item name: ")
-        Food.addFood(itemname)
+        Food.addFood(itemname, myc)
 
 def decideForRemove() :
     global tables
@@ -548,11 +413,11 @@ def decideForRemove() :
 
     elif(location == "add or remove game") :
         gamename = input("Please enter name of the game that you want to remove: ")
-        Game.removeAGame(gamename)
+        Game.removeAGame(gamename, myc)
 
     elif(location == "add or remove food") :
         itemname = input("Please enter the item name that you want to remove: ")
-        Food.removeAFood(itemname)
+        Food.removeAFood(itemname, myc)
 
 
 def showTableInfos():
@@ -576,18 +441,10 @@ def saveTableinfos():
 
 def getLog():
 
-    # if(os.path.exists("log.txt")):
-    #     os.remove("log.txt")
-    # log = open("log.txt", "a")
     code = "insert into location(name) values(%s)"
     x = [(location, )]
     myc.executemany(code, x)
     mydb.commit()
-    # log.write(json.dumps(location, indent = 0))
-    # for i in tables :
-    #     log.write(json.dumps(i.getTableInfo(), indent = 0))
-    #     log.write(json.dumps(i.getTableCustomerInfos(), indent = 0))
-
 
 
 
@@ -625,8 +482,8 @@ gamesName = {}
 menu = {}
 tables = []
 
-gamesName = Game.getGameList()
-menu = Food.getmenu()
+gamesName = Game.getGameList(myc)
+menu = Food.getmenu(myc)
 saveTableinfos()
 location = "startMenu"
 printStartMenu()
