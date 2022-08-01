@@ -12,7 +12,6 @@ class customer(person) :
         self.tablenumber = tablenumber
         self.gameList = []
         self.orders = []
-        self.checkInTime = ""
         self.checkOutTime = ""
         self.costs = 0
         infos = self.getInfos()
