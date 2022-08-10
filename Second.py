@@ -1,7 +1,13 @@
-import json, os, msvcrt, time, mysql.connector as mysql
+import json, os, msvcrt, time, mysql.connector as mysql, sys
+from scrapy.util.project import get_project_settings
+from scrapy.crawler import Crawler, CrawlerProcess
 from Game import Game
 from Food import Food
 from Person import person
+
+sys.path.apppend("../firstS")
+from firstS.spiders.Food import FoodSpider
+from firstS.spider.Game import GameSpider
 
 class customer(person) :
 

@@ -30,8 +30,9 @@ class Game :
     def addGame(name, myc):
 
         global gamesName
+        name = name.lower()
         if not name in gamesName:
-            gamesName.update({name : "0"})
+            gamesName.update({nam : "0"})
             code = "insert into gamelist(name, count) values(%s, 0)"
             myc.execute(code, [(name)])
         else :
